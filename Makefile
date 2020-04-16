@@ -7,7 +7,7 @@ LDFLAGS		+= -X github.com/keel-hq/keel/version.Version=$(VERSION)
 LDFLAGS		+= -X github.com/keel-hq/keel/version.Revision=$(GIT_REVISION)
 LDFLAGS		+= -X github.com/keel-hq/keel/version.BuildDate=$(JOBDATE)
 
-ARMFLAGS		+= -a -v
+ARMFLAGS		+= -v
 ARMFLAGS		+= -X github.com/keel-hq/keel/version.Version=$(VERSION)
 ARMFLAGS		+= -X github.com/keel-hq/keel/version.Revision=$(GIT_REVISION)
 ARMFLAGS		+= -X github.com/keel-hq/keel/version.BuildDate=$(JOBDATE)
@@ -51,6 +51,9 @@ aarch64:
 
 arm: build-arm fetch-certs armhf aarch64
 
+all-arch: lint-ui
+	docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t keelhq/keel:$(VERSION) --push .
+
 test:
 	go get github.com/mfridman/tparse
 	go test -json -v `go list ./... | egrep -v /tests` -cover | tparse -all -smallscreen
@@ -61,8 +64,7 @@ build:
 
 install:
 	@echo "++ Installing keel"
-	# CGO_ENABLED=0 GOOS=linux go install -ldflags "$(LDFLAGS)" github.com/keel-hq/keel/cmd/keel	
-	GOOS=linux go install -ldflags "$(LDFLAGS)" github.com/keel-hq/keel/cmd/keel	
+	CGO_ENABLED=1 GOOS=linux go install -ldflags "$(LDFLAGS)" github.com/keel-hq/keel/cmd/keel	
 
 image:
 	docker build -t keelhq/keel:alpha -f Dockerfile .
